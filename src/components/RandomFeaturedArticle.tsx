@@ -37,6 +37,7 @@ export default ((opts?: RandomFeaturedArticleOptions) => {
         data-page-title={pageTitle}
         data-activate-urls={activateUrls.join("|")}
         data-debug={debug ? "true" : "false"}
+        data-read-more-label="Read More"
       ></div>
     );
   };

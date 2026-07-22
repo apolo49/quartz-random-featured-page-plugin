@@ -4,13 +4,14 @@ A Quartz v5 component plugin that displays a random featured article on your sit
 
 ## Features
 
-- ✅ Date-based article selection (same article all day long)
-- ✅ Automatic filtering of index pages
-- ✅ Page-specific activation (title and URL matching)
-- ✅ Fallback content index loading
-- ✅ XSS-safe HTML escaping
-- ✅ Proper SPA cleanup registration
-- ✅ Fully tested with 100% coverage
+- ✅ **UTC-synchronized daily rotation**: Every visitor sees the same featured article for a calendar day (rotates at midnight UTC)
+- ✅ **Seeded RNG**: Uses a fast deterministic algorithm to pick consistently from the article pool
+- ✅ **Automatic filtering**: Excludes index pages, untitled entries, and supports opt-out tags
+- ✅ **Page-specific activation**: Fires only on configured page titles and URLs
+- ✅ **XSS-safe rendering**: All content is escaped and sanitized
+- ✅ **SPA-aware**: Properly handles Quartz's SPA navigation and cleanup
+- ✅ **CSS variables**: Uses theme colors, respects dark mode
+- ✅ **Comprehensive tests**: Unit tests for all core logic
 
 ## Getting started
 
@@ -32,15 +33,30 @@ The template is configured to bundle all dependencies by default via `noExternal
 
 ## Usage in Quartz
 
-Add the plugin to your Quartz config:
+First, ensure the [ContentIndex](https://github.com/quartz-community/content-index) plugin is installed, as this plugin depends on it to access the site's content index.
+
+Install this plugin into your Quartz site:
+
+```bash
+npx quartz plugin add github:apolo49/quartz-random-featured-page-plugin
+```
+
+Register it in your `quartz.config.ts`:
 
 ```ts
-import { RandomFeaturedArticle } from "quartz-random-featured-page-plugin/components";
+import { RandomFeaturedArticle } from "./plugins/quartz-random-featured-page-plugin/dist/components/index";
 
 export default {
   plugins: {
-    components: {
-      body: [
+    transformers: [...],
+    filters: [...],
+    emitters: [...],
+  },
+  layout: {
+    "en-US": {
+      head: Head(),
+      header: [],
+      afterBody: [
         RandomFeaturedArticle({
           pageTitle: "Welcome to Tara - The World of Solara | Tara, the world of Solara",
           activateUrls: [
@@ -50,12 +66,15 @@ export default {
           debug: false,
         }),
       ],
+      left: [...],
+      right: [...],
+      footer: Footer(),
     },
   },
 };
 ```
 
-Add this div to your index page where you want the featured article to appear:
+Add this div to your index page template (typically in `quartz/components/pages/index.tsx` or your custom layout component) where you want the featured article to appear:
 
 ```html
 <div id="featured-article"></div>
@@ -65,11 +84,13 @@ Add this div to your index page where you want the featured article to appear:
 
 ### `RandomFeaturedArticle(options)`
 
-| Option         | Type       | Default                                      | Description                          |
-| -------------- | ---------- | -------------------------------------------- | ------------------------------------ |
-| `pageTitle`    | `string`   | `"Welcome to Tara - The World of Solara..."` | The exact page title to activate on  |
-| `activateUrls` | `string[]` | Your two configured URLs                     | URLs where the plugin activates      |
-| `debug`        | `boolean`  | `false`                                      | Enable console logging for debugging |
+| Option         | Type       | Default                                                              | Description                                                  |
+| -------------- | ---------- | -------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `pageTitle`    | `string`   | `"Welcome to Tara - The World of Solara\|Tara, the world of Solara"` | The exact page title to activate on (case-sensitive)         |
+| `activateUrls` | `string[]` | User's configured campaign site URLs                                 | URLs where the plugin activates (case-insensitive)           |
+| `debug`        | `boolean`  | `false`                                                              | Enable console logging for debugging; output goes to browser |
+| `requireTag`   | `string?`  | undefined                                                            | Only feature articles with this frontmatter tag              |
+| `excludeTag`   | `string?`  | undefined                                                            | Skip articles with this frontmatter tag                      |
 
 ## How It Works
 

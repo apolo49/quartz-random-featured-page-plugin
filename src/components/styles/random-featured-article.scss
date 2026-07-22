@@ -1,10 +1,14 @@
 .featured-article-content {
   padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(
+    135deg,
+    var(--accent-color, #667eea) 0%,
+    var(--accent-secondary, #764ba2) 100%
+  );
+  color: var(--text-light, white);
   border-radius: 8px;
   margin: 20px 0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px var(--shadow, rgba(0, 0, 0, 0.1));
 }
 
 .featured-article-title {

@@ -1,16 +1,6 @@
 // ============================================================================
 // Random Featured Article Plugin - Client-Side Logic
 // ============================================================================
-// This script selects a featured article from the site index each day
-// using a seeded random number generator based on the current date.
-// Similar to Wikipedia's featured article of the day.
-// ============================================================================
-/* eslint-disable no-restricted-syntax */
-
-// @ts-nocheck
-// ============================================================================
-// Random Featured Article Plugin - Client-Side Logic
-// ============================================================================
 // Picks a featured article from Quartz's own contentIndex.json each day,
 // using the current UTC date as a seed for a deterministic PRNG. Similar to
 // Wikipedia's "Today's Featured Article".
@@ -28,6 +18,8 @@
 // which imports this file directly (see AGENTS.md's testing patterns).
 // ============================================================================
 /* eslint-disable no-restricted-syntax */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 
 export interface ContentDetail {
   slug: string;

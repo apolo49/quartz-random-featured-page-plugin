@@ -1,4 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {
+  mulberry32,
+  hashSeed,
+  getDaySeed,
+  isActivePage,
+  escapeHtml,
+  truncate,
+  filterEligibleArticles,
+  pickFeatured,
+  type ContentDetail,
+} from "../src/components/scripts/random-featured-article.inline";
 
 // Test suite for RandomFeaturedArticle component logic
 describe("RandomFeaturedArticle", () => {
@@ -6,7 +17,7 @@ describe("RandomFeaturedArticle", () => {
 
   beforeEach(() => {
     // Setup DOM for testing
-    document.body.innerHTML = '<div id="featured-article"></div>';
+    document.body.innerHTML = '<div id="featured-article-init"></div>';
 
     // Save original location
     originalHref = window.location.href;
@@ -25,117 +36,97 @@ describe("RandomFeaturedArticle", () => {
     (window as unknown as Record<string, unknown>).location = { href: originalHref };
   });
 
-  it("should create component with default options", () => {
-    // This is a simple check that the component can be instantiated
-    // Full component testing would require Preact testing library
-    expect(true).toBe(true);
+  it("getDaySeed generates consistent UTC day seeds", () => {
+    const testDate = new Date("2024-03-15T10:30:00Z");
+    const seed = getDaySeed(testDate);
+    expect(seed).toBe("2024-03-15");
+    expect(typeof seed).toBe("string");
   });
 
-  it("should use seeded random for consistent daily selection", () => {
-    /**
-     * Seeded random number generator using a simple algorithm
-     * Based on the date seed to ensure the same article appears all day
-     */
-    function seededRandom(seed: number): number {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    }
-
-    /**
-     * Get today's date as a seed (YYYY-MM-DD format)
-     */
-    function getDaySeed(): number {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const dateStr = `${year}${month}${day}`;
-      return parseInt(dateStr, 10);
-    }
-
-    // Get seed for today
-    const seed = getDaySeed();
-
-    // Same seed should produce same random values
-    const rand1 = seededRandom(seed);
-    const rand2 = seededRandom(seed);
-
-    expect(rand1).toBe(rand2);
-    expect(rand1).toBeGreaterThanOrEqual(0);
-    expect(rand1).toBeLessThan(1);
+  it("mulberry32 produces different values for different seeds", () => {
+    const rng1 = mulberry32(hashSeed("2024-03-15"))();
+    const rng2 = mulberry32(hashSeed("2024-03-16"))();
+    expect(rng1).not.toBe(rng2);
+    expect(rng1).toBeGreaterThanOrEqual(0);
+    expect(rng1).toBeLessThan(1);
+    expect(rng2).toBeGreaterThanOrEqual(0);
+    expect(rng2).toBeLessThan(1);
   });
 
-  it("should select different articles on different days", () => {
-    /**
-     * Seeded random number generator using a simple algorithm
-     */
-    function seededRandom(seed: number): number {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    }
-
-    // Simulate different days
-    const seed1 = 20240101;
-    const seed2 = 20240102;
-
-    const rand1 = seededRandom(seed1);
-    const rand2 = seededRandom(seed2);
-
-    // Different seeds should produce different random values (with high probability)
-    expect(rand1).not.toBe(rand2);
+  it("mulberry32 is deterministic with same seed", () => {
+    const seed = hashSeed("2024-03-15");
+    const rng1 = mulberry32(seed);
+    const rng2 = mulberry32(seed);
+    expect(rng1()).toBe(rng2());
   });
 
-  it("should escape HTML in article content", () => {
-    function escapeHtml(text: string): string {
-      const map: Record<string, string> = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      };
-      return text.replace(/[&<>"']/g, (char) => map[char] || char);
-    }
+  it("pickFeatured picks the same article for same day seed", () => {
+    const articles: ContentDetail[] = [
+      { slug: "article-1", title: "Article 1", description: "First" },
+      { slug: "article-2", title: "Article 2", description: "Second" },
+      { slug: "article-3", title: "Article 3", description: "Third" },
+    ];
 
+    const seed = "2024-03-15";
+    const pick1 = pickFeatured(articles, seed);
+    const pick2 = pickFeatured(articles, seed);
+
+    expect(pick1).toEqual(pick2);
+    expect(pick1.slug).toBe(pick1.slug);
+  });
+
+  it("escapeHtml prevents XSS attacks", () => {
     const malicious = '<script>alert("xss")</script>';
     const escaped = escapeHtml(malicious);
 
     expect(escaped).toBe("&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;");
     expect(escaped).not.toContain("<script>");
+    expect(escaped).not.toContain("</script>");
   });
 
-  it("should check page title correctly", () => {
-    const expectedTitle = "Welcome to Tara - The World of Solara | Tara, the world of Solara";
+  it("isActivePage matches URLs case-insensitively with/without trailing slash", () => {
+    const urls = ["https://example.com/featured", "https://example.com/"];
 
-    // Mock document.title
-    Object.defineProperty(document, "title", {
-      writable: true,
-      value: expectedTitle,
-    });
-
-    expect(document.title).toBe(expectedTitle);
+    expect(isActivePage("https://example.com/featured", urls)).toBe(true);
+    expect(isActivePage("https://example.com/featured/", urls)).toBe(true);
+    expect(isActivePage("HTTPS://EXAMPLE.COM/FEATURED", urls)).toBe(true);
+    expect(isActivePage("https://example.com/other", urls)).toBe(false);
   });
 
-  it("should filter out index pages from articles", () => {
-    const articles = [
-      { slug: "article-1", title: "Article 1", excerpt: "First article" },
-      { slug: "index", title: "Index Page", excerpt: "Index" }, // Should be filtered
-      { slug: "article-2", title: "Article 2", excerpt: "Second article" },
-      { slug: "docs/index", title: "Docs Index", excerpt: "Docs" }, // Should be filtered
-      { slug: "article-3", title: "Article 3", excerpt: "Third article" },
+  it("filterEligibleArticles excludes index pages and untitled articles", () => {
+    const articles: ContentDetail[] = [
+      { slug: "article-1", title: "Article 1", description: "First" },
+      { slug: "index", title: "Index Page", description: "Index" },
+      { slug: "article-2", title: "Article 2", description: "Second" },
+      { slug: "docs/index", title: "Docs", description: "Docs" },
+      { slug: "article-3", title: "", description: "No title" },
     ];
 
-    const filtered = articles.filter((item) => {
-      const slug = item.slug || "";
-      const title = item.title || "";
-      return !slug.endsWith("index") && title && title.length > 0;
-    });
+    const filtered = filterEligibleArticles(articles);
+    expect(filtered).toHaveLength(2);
+    expect(filtered.map((a) => a.slug)).toEqual(["article-1", "article-2"]);
+  });
 
-    expect(filtered).toHaveLength(3);
-    expect(filtered).toEqual([
-      { slug: "article-1", title: "Article 1", excerpt: "First article" },
-      { slug: "article-2", title: "Article 2", excerpt: "Second article" },
-      { slug: "article-3", title: "Article 3", excerpt: "Third article" },
-    ]);
+  it("filterEligibleArticles respects tag filters", () => {
+    const articles: ContentDetail[] = [
+      { slug: "article-1", title: "Article 1", tags: ["featured"] },
+      { slug: "article-2", title: "Article 2", tags: ["draft"] },
+      { slug: "article-3", title: "Article 3", tags: ["featured", "updated"] },
+    ];
+
+    const filtered = filterEligibleArticles(articles, { requireTag: "featured" });
+    expect(filtered).toHaveLength(2);
+    expect(filtered.map((a) => a.slug)).toEqual(["article-1", "article-3"]);
+
+    const excluded = filterEligibleArticles(articles, { excludeTag: "draft" });
+    expect(excluded).toHaveLength(2);
+    expect(excluded.map((a) => a.slug)).toEqual(["article-1", "article-3"]);
+  });
+
+  it("truncate shortens text with ellipsis and respects word boundaries", () => {
+    const long = "This is a very long article about something interesting";
+    const truncated = truncate(long, 20);
+    expect(truncated).toContain("\u2026");
+    expect(truncated.length).toBeLessThanOrEqual(21);
   });
 });

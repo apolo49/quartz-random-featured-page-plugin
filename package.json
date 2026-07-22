@@ -1,23 +1,21 @@
 {
-  "name": "quartz-plugin-featured-article",
+  "name": "quartz-random-featured-page-plugin",
   "version": "0.1.0",
-  "description": "Template repository for Quartz community plugins.",
+  "description": "Quartz v5 component plugin that displays a random featured article daily, similar to Wikipedia's featured article of the day.",
   "type": "module",
   "license": "MIT",
-  "author": "Quartz Community",
-  "homepage": "https://quartz.jzhao.xyz",
+  "author": "Apolo49",
+  "homepage": "https://github.com/apolo49/quartz-random-featured-page-plugin",
   "repository": {
     "type": "git",
-    "url": "https://github.com/quartz-community/plugin-template"
+    "url": "https://github.com/apolo49/quartz-random-featured-page-plugin.git"
   },
   "keywords": [
     "quartz",
     "quartz-plugin",
-    "plugin-template",
-    "remark",
-    "rehype",
-    "mdast",
-    "hast"
+    "component",
+    "featured-article",
+    "daily-rotation"
   ],
   "files": [
     "dist",
@@ -95,30 +93,39 @@
     "vitest": "^2.1.9"
   },
   "quartz": {
-    "name": "quartz-plugin-featured-article",
-    "displayName": "Featured Article Plugin",
-    "category": "transformer",
-    "version": "1.0.0",
+    "name": "quartz-random-featured-page-plugin",
+    "displayName": "Random Featured Article",
+    "category": "component",
+    "version": "0.1.0",
     "quartzVersion": ">=5.0.0",
     "dependencies": [],
-    "defaultOrder": 50,
     "defaultEnabled": true,
-    "defaultOptions": {},
+    "defaultOptions": {
+      "pageTitle": "Welcome to Tara - The World of Solara | Tara, the world of Solara",
+      "activateUrls": [
+        "https://apolo49.github.io/before-the-start-dnd-campaign-notes/",
+        "https://apolo49.github.io/before-the-start-dnd-campaign-notes/index"
+      ],
+      "debug": false
+    },
     "optionSchema": {
-      "highlightToken": {
-        "type": "enum",
-        "values": [
-          "==",
-          "**",
-          "~~"
-        ]
+      "pageTitle": {
+        "type": "string",
+        "description": "The exact page title to activate on"
+      },
+      "activateUrls": {
+        "type": "array",
+        "description": "URLs where the plugin activates (case-insensitive)"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable console logging for debugging"
       }
     },
     "components": {
-      "ExampleComponent": {
-        "displayName": "Featured Article Component",
-        "defaultPosition": "right",
-        "defaultPriority": 50
+      "RandomFeaturedArticle": {
+        "displayName": "Random Featured Article",
+        "defaultPosition": "afterBody"
       }
     }
   },
