@@ -1,7 +1,8 @@
 export default {
   components: {
-    example: {
-      title: "Example",
+    randomFeaturedArticle: {
+      title: "Featured Article",
+      readMore: "Read More",
     },
   },
 };

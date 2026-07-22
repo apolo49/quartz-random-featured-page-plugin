@@ -1,2 +1,2 @@
-export { default as ExampleComponent } from "./ExampleComponent";
-export type { ExampleComponentOptions } from "./ExampleComponent";
+export { default as RandomFeaturedArticle } from "./RandomFeaturedArticle";
+export type { RandomFeaturedArticleOptions } from "./RandomFeaturedArticle";

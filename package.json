@@ -1,5 +1,5 @@
 {
-  "name": "@quartz-community/plugin-template",
+  "name": "quartz-plugin-featured-article",
   "version": "0.1.0",
   "description": "Template repository for Quartz community plugins.",
   "type": "module",
@@ -78,6 +78,7 @@
     "eslint-config-prettier": "^9.1.0",
     "github-slugger": "^2.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
+    "jsdom": "^29.1.1",
     "mdast-util-find-and-replace": "^3.0.2",
     "preact": "^10.28.2",
     "prettier": "^3.6.2",
@@ -94,8 +95,8 @@
     "vitest": "^2.1.9"
   },
   "quartz": {
-    "name": "plugin-template",
-    "displayName": "Plugin Template",
+    "name": "quartz-plugin-featured-article",
+    "displayName": "Featured Article Plugin",
     "category": "transformer",
     "version": "1.0.0",
     "quartzVersion": ">=5.0.0",
@@ -115,7 +116,7 @@
     },
     "components": {
       "ExampleComponent": {
-        "displayName": "Example Component",
+        "displayName": "Featured Article Component",
         "defaultPosition": "right",
         "defaultPriority": 50
       }
